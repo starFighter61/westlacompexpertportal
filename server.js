@@ -75,6 +75,7 @@ app.use('/documents', require('./routes/documents'));
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 3000;
 
+// Force redeploy trigger
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
   app.listen(PORT, () => {
