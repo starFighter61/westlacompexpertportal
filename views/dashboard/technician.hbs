@@ -1,0 +1,135 @@
+<h1 class="h2">{{#ifEquals role 'admin'}}Admin{{else}}Technician{{/ifEquals}} Dashboard</h1>
+<p>Welcome back, {{name}}!</p>
+
+<div class="row">
+  <!-- Service Status Overview -->
+  <div class="col-md-12 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Service Status Overview</h5>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col">
+            <h6 class="text-muted">New</h6>
+            <h4 class="mb-0">{{statusStats.New}}</h4>
+          </div>
+          <div class="col">
+            <h6 class="text-muted">Diagnosing</h6>
+            <h4 class="mb-0">{{statusStats.Diagnosing}}</h4>
+          </div>
+          <div class="col">
+            <h6 class="text-muted">Awaiting Approval</h6>
+            <h4 class="mb-0">{{statusStats.[Awaiting Approval]}}</h4>
+          </div>
+          <div class="col">
+            <h6 class="text-muted">In Progress</h6>
+            <h4 class="mb-0">{{statusStats.[In Progress]}}</h4>
+          </div>
+          <div class="col">
+            <h6 class="text-muted">Ready for Pickup</h6>
+            <h4 class="mb-0">{{statusStats.[Ready for Pickup]}}</h4>
+          </div>
+          <div class="col">
+            <h6 class="text-muted">Completed</h6>
+            <h4 class="mb-0">{{statusStats.Completed}}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Services -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Recent Service Requests</h5>
+      </div>
+      <div class="card-body">
+        {{#if services}}
+          <ul class="list-group list-group-flush">
+            {{#each services}}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <a href="/services/{{_id}}">{{deviceType}} - {{client.name}}</a>
+                  <small class="d-block text-muted">
+                    {{#if technician}}Assigned: {{technician.name}}{{else}}Unassigned{{/if}} | {{formatDate createdAt 'MM/DD/YYYY'}}
+                  </small>
+                </div>
+                <span class="badge bg-info rounded-pill">{{status}}</span>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p>No active service requests.</p>
+        {{/if}}
+      </div>
+      <div class="card-footer text-center">
+        <a href="/services" class="btn btn-sm btn-outline-primary">View All Services</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Invoices -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Recent Invoices</h5>
+      </div>
+      <div class="card-body">
+        {{#if recentInvoices}}
+          <ul class="list-group list-group-flush">
+            {{#each recentInvoices}}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <a href="/invoices/{{_id}}">Invoice #{{invoiceNumber}}</a>
+                  <small class="d-block text-muted">
+                    Client: {{client.name}} | Total: {{formatCurrency total}}
+                  </small>
+                </div>
+                <span class="badge {{#ifEquals status 'Paid'}}bg-success{{else ifEquals status 'Overdue'}}bg-danger{{else}}bg-warning{{/ifEquals}} rounded-pill">{{status}}</span>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p>No recent invoices.</p>
+        {{/if}}
+      </div>
+      <div class="card-footer text-center">
+        <a href="/invoices" class="btn btn-sm btn-outline-primary">View All Invoices</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Messages -->
+  <div class="col-md-12 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Recent Messages</h5>
+      </div>
+      <div class="card-body">
+        {{#if conversations}}
+          <ul class="list-group list-group-flush">
+            {{#each conversations}}
+              <li class="list-group-item">
+                <a href="/messages/{{_id}}">{{subject}}</a>
+                <small class="d-block text-muted">
+                  Participants: 
+                  {{#each participants}}
+                    {{name}}{{#unless @last}}, {{/unless}}
+                  {{/each}}
+                  | Last message: {{formatDate updatedAt 'MM/DD/YYYY h:mm A'}}
+                </small>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p>You have no recent messages.</p>
+        {{/if}}
+      </div>
+      <div class="card-footer text-center">
+        <a href="/messages" class="btn btn-sm btn-outline-primary">View All Messages</a>
+      </div>
+    </div>
+  </div>
+</div>

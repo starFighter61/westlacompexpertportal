@@ -1,0 +1,131 @@
+<h1 class="h2">Client Dashboard</h1>
+<p>Welcome back, {{name}}!</p>
+
+<div class="row">
+  <!-- Recent Services -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Recent Service Requests</h5>
+      </div>
+      <div class="card-body">
+        {{#if services}}
+          <ul class="list-group list-group-flush">
+            {{#each services}}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <a href="/services/{{_id}}">{{deviceType}} - {{truncate issueDescription 30}}</a>
+                  <small class="d-block text-muted">
+                    {{#if technician}}Technician: {{technician.name}}{{else}}Unassigned{{/if}}
+                  </small>
+                </div>
+                <span class="badge bg-info rounded-pill">{{status}}</span>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p>You have no active service requests.</p>
+        {{/if}}
+      </div>
+      <div class="card-footer text-center">
+        <a href="/services" class="btn btn-sm btn-outline-primary">View All Services</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Invoices -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Recent Invoices</h5>
+      </div>
+      <div class="card-body">
+        {{#if invoices}}
+          <ul class="list-group list-group-flush">
+            {{#each invoices}}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <a href="/invoices/{{_id}}">Invoice #{{invoiceNumber}}</a>
+                  <small class="d-block text-muted">
+                    Due: {{formatDate dueDate 'MM/DD/YYYY'}} | Total: {{formatCurrency total}}
+                  </small>
+                </div>
+                <span class="badge {{#ifEquals status 'Paid'}}bg-success{{else ifEquals status 'Overdue'}}bg-danger{{else}}bg-warning{{/ifEquals}} rounded-pill">{{status}}</span>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p>You have no recent invoices.</p>
+        {{/if}}
+      </div>
+      <div class="card-footer text-center">
+        <a href="/invoices" class="btn btn-sm btn-outline-primary">View All Invoices</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Messages -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Recent Messages</h5>
+      </div>
+      <div class="card-body">
+        {{#if conversations}}
+          <ul class="list-group list-group-flush">
+            {{#each conversations}}
+              <li class="list-group-item">
+                <a href="/messages/{{_id}}">{{subject}}</a>
+                {{#if lastMessage}}
+                  <small class="d-block text-muted">
+                    Last message: {{formatDate lastMessage.createdAt 'MM/DD/YYYY h:mm A'}}
+                  </small>
+                {{/if}}
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p>You have no recent messages.</p>
+        {{/if}}
+      </div>
+      <div class="card-footer text-center">
+        <a href="/messages" class="btn btn-sm btn-outline-primary">View All Messages</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Documents -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Recent Documents</h5>
+      </div>
+      <div class="card-body">
+        {{#if documents}}
+          <ul class="list-group list-group-flush">
+            {{#each documents}}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <a href="/documents/{{_id}}">
+                    <i class="fas {{getFileIcon mimetype}} me-2"></i>{{name}}
+                  </a>
+                  <small class="d-block text-muted">
+                    Uploaded: {{formatDate createdAt 'MM/DD/YYYY'}} | Size: {{formatFileSize size}}
+                  </small>
+                </div>
+                <a href="/documents/{{_id}}/download" class="btn btn-sm btn-outline-secondary">
+                  <i class="fas fa-download"></i>
+                </a>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p>No documents available.</p>
+        {{/if}}
+      </div>
+      <div class="card-footer text-center">
+        <a href="/documents" class="btn btn-sm btn-outline-primary">View All Documents</a>
+      </div>
+    </div>
+  </div>
+</div>

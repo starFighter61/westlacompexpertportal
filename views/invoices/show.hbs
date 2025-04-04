@@ -1,0 +1,183 @@
+<h1 class="h2">Invoice Details</h1>
+<p>View details for Invoice #{{invoice.invoiceNumber}}.</p>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="card-title mb-0">Invoice #{{invoice.invoiceNumber}}</h5>
+    <span class="badge {{#ifEquals invoice.status 'Paid'}}bg-success{{else if invoice.isOverdue}}bg-danger{{else}}bg-warning{{/ifEquals}}">{{invoice.status}}{{#if invoice.isOverdue}} (Overdue){{/if}}</span>
+  </div>
+  <div class="card-body">
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <h5>Billed To:</h5>
+        <p>
+          {{invoice.client.name}}<br>
+          {{invoice.client.email}}<br>
+          {{#if invoice.client.phone}}{{invoice.client.phone}}<br>{{/if}}
+          {{#if invoice.client.address.street}}{{invoice.client.address.street}}<br>{{/if}}
+          {{#if invoice.client.address.city}}{{invoice.client.address.city}}, {{invoice.client.address.state}} {{invoice.client.address.zipCode}}{{/if}}
+        </p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <h5>Invoice Details:</h5>
+        <p>
+          <strong>Invoice Date:</strong> {{invoice.formattedIssueDate}}<br>
+          <strong>Due Date:</strong> {{invoice.formattedDueDate}}<br>
+          <strong>Service ID:</strong> <a href="/services/{{invoice.service._id}}">{{invoice.service._id}}</a><br>
+          <strong>Service:</strong> {{invoice.service.deviceType}} - {{invoice.service.issueDescription}}
+        </p>
+      </div>
+    </div>
+    
+    <h5>Items:</h5>
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class="text-end">Quantity</th>
+            <th class="text-end">Unit Price</th>
+            <th class="text-end">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each invoice.items}}
+            <tr>
+              <td>{{description}}</td>
+              <td class="text-end">{{quantity}}</td>
+              <td class="text-end">{{formatCurrency unitPrice}}</td>
+              <td class="text-end">{{formatCurrency amount}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="row justify-content-end">
+      <div class="col-md-4">
+        <div class="mb-2 d-flex justify-content-between">
+          <span>Subtotal:</span>
+          <span>{{formatCurrency invoice.subtotal}}</span>
+        </div>
+        <div class="mb-2 d-flex justify-content-between">
+          <span>Tax (8.75%):</span>
+          <span>{{formatCurrency invoice.tax}}</span>
+        </div>
+        {{#if invoice.discount}}
+          <div class="mb-2 d-flex justify-content-between">
+            <span>Discount:</span>
+            <span>-{{formatCurrency invoice.discount}}</span>
+          </div>
+        {{/if}}
+        <hr>
+        <div class="mb-2 d-flex justify-content-between fw-bold fs-5">
+          <span>Total:</span>
+          <span>{{formatCurrency invoice.total}}</span>
+        </div>
+      </div>
+    </div>
+    
+    {{#if invoice.notes}}
+      <hr>
+      <h5>Notes:</h5>
+      <p>{{invoice.notes}}</p>
+    {{/if}}
+    
+    {{#ifEquals invoice.status 'Paid'}}
+      <hr>
+      <h5>Payment Details:</h5>
+      <p>
+        <strong>Payment Date:</strong> {{formatDate invoice.paymentDate 'MM/DD/YYYY h:mm A'}}<br>
+        <strong>Payment Method:</strong> {{invoice.paymentMethod}}<br>
+        {{#if invoice.paymentReference}}
+          <strong>Reference:</strong> {{invoice.paymentReference}}
+        {{/if}}
+      </p>
+    {{/ifEquals}}
+  </div>
+  
+  <div class="card-footer text-end">
+    {{#ifUserIsClient user.role}}
+      {{#ifEquals invoice.status 'Unpaid'}}
+        <a href="/invoices/{{invoice._id}}/pay" class="btn btn-success">
+          <i class="fas fa-credit-card"></i> Pay Invoice
+        </a>
+      {{/ifEquals}}
+    {{/ifUserIsClient}}
+    
+    {{#ifUserIsTechnician user.role}}
+      {{#ifEquals invoice.status 'Unpaid'}}
+        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#markAsPaidModal">
+          Mark as Paid
+        </button>
+      {{/ifEquals}}
+      {{#ifEquals invoice.status 'Paid'}}
+        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#markAsUnpaidModal">
+          Mark as Unpaid
+        </button>
+      {{/ifEquals}}
+    {{/ifUserIsTechnician}}
+    
+    <a href="/invoices/{{invoice._id}}/print" class="btn btn-outline-secondary" target="_blank">
+      <i class="fas fa-print"></i> Print Invoice
+    </a>
+    <a href="/invoices" class="btn btn-secondary">Back to Invoices</a>
+  </div>
+</div>
+
+<!-- Mark as Paid Modal -->
+<div class="modal fade" id="markAsPaidModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/invoices/{{invoice._id}}/status?_method=PUT" method="POST">
+        <input type="hidden" name="status" value="Paid">
+        <div class="modal-header">
+          <h5 class="modal-title">Mark Invoice as Paid</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Mark this invoice as paid manually?</p>
+          <div class="mb-3">
+            <label for="paymentMethod" class="form-label">Payment Method</label>
+            <select class="form-select" id="paymentMethod" name="paymentMethod" required>
+              <option>Cash</option>
+              <option>Check</option>
+              <option>Bank Transfer</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="paymentReference" class="form-label">Reference (Optional)</label>
+            <input type="text" class="form-control" id="paymentReference" name="paymentReference">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Mark as Paid</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Mark as Unpaid Modal -->
+<div class="modal fade" id="markAsUnpaidModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/invoices/{{invoice._id}}/status?_method=PUT" method="POST">
+        <input type="hidden" name="status" value="Unpaid">
+        <div class="modal-header">
+          <h5 class="modal-title">Mark Invoice as Unpaid</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to mark this invoice as unpaid? This will revert the payment status.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-secondary">Mark as Unpaid</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

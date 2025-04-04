@@ -1,0 +1,71 @@
+<h1 class="h2">Conversation: {{conversation.subject}}</h1>
+<p>
+  Participants: 
+  {{#each conversation.participants}}
+    {{name}}{{#unless @last}}, {{/unless}}
+  {{/each}}
+  {{#if conversation.service}}
+    | Related Service: <a href="/services/{{conversation.service._id}}">{{conversation.service.deviceType}}</a>
+  {{/if}}
+</p>
+
+<div class="card mb-4">
+  <div class="card-body message-thread" style="max-height: 500px; overflow-y: auto;">
+    {{#each messages}}
+      <div class="d-flex mb-3 {{#ifEquals sender._id ../currentUser}}justify-content-end{{/ifEquals}}">
+        <div class="card {{#ifEquals sender._id ../currentUser}}bg-primary text-white{{else}}bg-light{{/ifEquals}}" style="max-width: 75%;">
+          <div class="card-body p-2">
+            <p class="card-text mb-1">{{content}}</p>
+            {{#if attachments}}
+              <div class="mt-2">
+                {{#each attachments}}
+                  <a href="{{path}}" target="_blank" class="d-block {{#ifEquals ../sender._id ../../currentUser}}text-white{{else}}text-dark{{/ifEquals}} text-decoration-none mb-1">
+                    <i class="fas fa-paperclip me-1"></i> {{filename}} ({{formatFileSize size}})
+                  </a>
+                {{/each}}
+              </div>
+            {{/if}}
+            <small class="text-muted {{#ifEquals sender._id ../currentUser}}text-white-50{{/ifEquals}}">
+              {{sender.name}} - {{formatDate createdAt 'MM/DD/YYYY h:mm A'}}
+            </small>
+          </div>
+        </div>
+      </div>
+    {{else}}
+      <p>No messages in this conversation yet.</p>
+    {{/each}}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form action="/messages/{{conversation._id}}" method="POST" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="content" class="form-label">Reply</label>
+        <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
+      </div>
+      <div class="mb-3">
+        <label for="attachments" class="form-label">Attachments (Max 5 files, 25MB each)</label>
+        <input class="form-control" type="file" id="attachments" name="attachments" multiple>
+      </div>
+      <button type="submit" class="btn btn-primary">Send Reply</button>
+      <a href="/messages" class="btn btn-secondary">Back to Conversations</a>
+      
+      {{#unless conversation.isArchived}}
+        <form action="/messages/{{conversation._id}}/archive?_method=PUT" method="POST" class="d-inline float-end">
+          <button type="submit" class="btn btn-outline-secondary">Archive</button>
+        </form>
+      {{else}}
+        <form action="/messages/{{conversation._id}}/unarchive?_method=PUT" method="POST" class="d-inline float-end">
+          <button type="submit" class="btn btn-outline-secondary">Unarchive</button>
+        </form>
+      {{/unless}}
+    </form>
+  </div>
+</div>
+
+<script>
+  // Scroll to the bottom of the message thread
+  const messageThread = document.querySelector('.message-thread');
+  messageThread.scrollTop = messageThread.scrollHeight;
+</script>

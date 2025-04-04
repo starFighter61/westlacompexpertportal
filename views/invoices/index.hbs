@@ -1,0 +1,85 @@
+<h1 class="h2">Invoices</h1>
+<p>View and manage your invoices.</p>
+
+{{#ifUserIsTechnician user.role}}
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Total Amount</h5>
+          <p class="card-text display-6">{{formatCurrency totalAmount}}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center text-success">
+        <div class="card-body">
+          <h5 class="card-title">Total Paid</h5>
+          <p class="card-text display-6">{{formatCurrency paidAmount}}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center text-danger">
+        <div class="card-body">
+          <h5 class="card-title">Total Unpaid</h5>
+          <p class="card-text display-6">{{formatCurrency unpaidAmount}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+{{/ifUserIsTechnician}}
+
+{{#if invoices}}
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Issue Date</th>
+          <th>Due Date</th>
+          {{#ifUserIsTechnician user.role}}
+            <th>Client</th>
+          {{/ifUserIsTechnician}}
+          <th>Service</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each invoices}}
+          <tr>
+            <td>{{invoiceNumber}}</td>
+            <td>{{formattedIssueDate}}</td>
+            <td>{{formattedDueDate}}</td>
+            {{#ifUserIsTechnician ../user.role}}
+              <td>{{client.name}}</td>
+            {{/ifUserIsTechnician}}
+            <td>{{service.deviceType}} - {{truncate service.issueDescription 30}}</td>
+            <td>{{formatCurrency total}}</td>
+            <td>
+              <span class="badge {{#ifEquals status 'Paid'}}bg-success{{else ifEquals status 'Overdue'}}bg-danger{{else}}bg-warning{{/ifEquals}}">{{status}}</span>
+            </td>
+            <td>
+              <a href="/invoices/{{_id}}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-eye"></i> View
+              </a>
+              {{#ifUserIsClient ../user.role}}
+                {{#ifEquals status 'Unpaid'}}
+                  <a href="/invoices/{{_id}}/pay" class="btn btn-sm btn-success">
+                    <i class="fas fa-credit-card"></i> Pay
+                  </a>
+                {{/ifEquals}}
+              {{/ifUserIsClient}}
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+{{else}}
+  <div class="alert alert-info" role="alert">
+    No invoices found.
+  </div>
+{{/if}}

@@ -1,0 +1,76 @@
+<h1 class="h2">Upload Document</h1>
+<p>Upload a new document to share.</p>
+
+<div class="card">
+  <div class="card-body">
+    <form action="/documents/upload" method="POST" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="file" class="form-label">Select File (Max 50MB)</label>
+        <input class="form-control" type="file" id="file" name="file" required>
+      </div>
+      
+      <div class="mb-3">
+        <label for="name" class="form-label">Document Name</label>
+        <input type="text" class="form-control" id="name" name="name" required>
+        <small class="form-text text-muted">This name will be displayed to users.</small>
+      </div>
+      
+      <div class="mb-3">
+        <label for="description" class="form-label">Description (Optional)</label>
+        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="category" class="form-label">Category</label>
+          <select class="form-select" id="category" name="category">
+            <option selected>Other</option>
+            <option>Invoice</option>
+            <option>Estimate</option>
+            <option>Diagnostic Report</option>
+            <option>User Manual</option>
+            <option>Warranty</option>
+          </select>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+          <label for="service" class="form-label">Related Service (Optional)</label>
+          <select class="form-select" id="service" name="service">
+            <option selected value="">None</option>
+            {{#each services}}
+              <option value="{{_id}}">
+                {{#if client}}{{client.name}} - {{/if}}{{deviceType}} - {{truncate issueDescription 40}} ({{status}})
+              </option>
+            {{/each}}
+          </select>
+        </div>
+      </div>
+      
+      {{#ifUserIsTechnician user.role}}
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="client" class="form-label">Assign to Client (Optional)</label>
+            <select class="form-select" id="client" name="client">
+              <option selected value="">None</option>
+              {{#each clients}}
+                <option value="{{_id}}">{{name}} ({{email}})</option>
+              {{/each}}
+            </select>
+            <small class="form-text text-muted">If assigned, only this client and technicians can see it (unless marked public).</small>
+          </div>
+          
+          <div class="col-md-6 mb-3 d-flex align-items-center">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="isPublic" name="isPublic">
+              <label class="form-check-label" for="isPublic">Make Publicly Visible</label>
+              <small class="form-text text-muted d-block">If checked, all clients can see this document.</small>
+            </div>
+          </div>
+        </div>
+      {{/ifUserIsTechnician}}
+      
+      <button type="submit" class="btn btn-primary">Upload Document</button>
+      <a href="/documents" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</div>

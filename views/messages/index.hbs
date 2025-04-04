@@ -1,0 +1,39 @@
+<h1 class="h2">Messages</h1>
+<p>View and manage your conversations.</p>
+
+<a href="/messages/new" class="btn btn-primary mb-3">
+  <i class="fas fa-plus"></i> New Conversation
+</a>
+
+{{#if conversations}}
+  <div class="list-group">
+    {{#each conversations}}
+      <a href="/messages/{{_id}}" class="list-group-item list-group-item-action {{#if isArchived}}list-group-item-light text-muted{{/if}}">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">{{subject}}</h5>
+          <small>{{formatDate updatedAt 'MM/DD/YYYY h:mm A'}}</small>
+        </div>
+        <p class="mb-1">
+          Participants: 
+          {{#each participants}}
+            {{name}}{{#unless @last}}, {{/unless}}
+          {{/each}}
+        </p>
+        {{#if service}}
+          <small class="text-muted">Related Service: {{service.deviceType}} - {{truncate service.issueDescription 30}}</small>
+        {{/if}}
+        {{#if lastMessage}}
+          <p class="mb-0 mt-1">
+            <small>
+              <strong>{{lastMessage.sender.name}}:</strong> {{truncate lastMessage.content 50}}
+            </small>
+          </p>
+        {{/if}}
+      </a>
+    {{/each}}
+  </div>
+{{else}}
+  <div class="alert alert-info" role="alert">
+    You have no conversations. Start a <a href="/messages/new">new conversation</a>.
+  </div>
+{{/if}}

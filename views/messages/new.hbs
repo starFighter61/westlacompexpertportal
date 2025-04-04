@@ -1,0 +1,43 @@
+<h1 class="h2">New Conversation</h1>
+<p>Start a new conversation.</p>
+
+<div class="card">
+  <div class="card-body">
+    <form action="/messages/new" method="POST">
+      <div class="mb-3">
+        <label for="recipient" class="form-label">Recipient</label>
+        <select class="form-select" id="recipient" name="recipient" required>
+          <option selected disabled value="">Choose...</option>
+          {{#each users}}
+            <option value="{{_id}}">{{name}} ({{role}})</option>
+          {{/each}}
+        </select>
+      </div>
+      
+      <div class="mb-3">
+        <label for="service" class="form-label">Related Service (Optional)</label>
+        <select class="form-select" id="service" name="service">
+          <option selected value="">None</option>
+          {{#each services}}
+            <option value="{{_id}}">
+              {{#if client}}{{client.name}} - {{/if}}{{deviceType}} - {{truncate issueDescription 40}} ({{status}})
+            </option>
+          {{/each}}
+        </select>
+      </div>
+      
+      <div class="mb-3">
+        <label for="subject" class="form-label">Subject</label>
+        <input type="text" class="form-control" id="subject" name="subject" required>
+      </div>
+      
+      <div class="mb-3">
+        <label for="message" class="form-label">Message</label>
+        <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Send Message</button>
+      <a href="/messages" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</div>

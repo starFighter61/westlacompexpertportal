@@ -1,0 +1,127 @@
+<h1 class="h2">Pay Invoice</h1>
+<p>Pay Invoice #{{invoice.invoiceNumber}} for {{formatCurrency invoice.total}}.</p>
+
+<div class="card">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <h5>Invoice Summary</h5>
+        <p><strong>Invoice Date:</strong> {{formatDate invoice.issueDate 'MM/DD/YYYY'}}</p>
+        <p><strong>Due Date:</strong> {{formatDate invoice.dueDate 'MM/DD/YYYY'}}</p>
+        <p><strong>Service:</strong> {{invoice.service.deviceType}} - {{invoice.service.issueDescription}}</p>
+        <p><strong>Total Amount:</strong> <span class="fw-bold fs-5">{{formatCurrency invoice.total}}</span></p>
+      </div>
+      
+      <div class="col-md-6">
+        <h5>Payment Options</h5>
+        
+        <!-- Stripe Payment Form -->
+        <form action="/invoices/{{invoice._id}}/pay" method="POST" id="payment-form">
+          <input type="hidden" name="paymentMethod" value="Credit Card">
+          
+          <div class="mb-3">
+            <label for="card-element" class="form-label">Credit or debit card</label>
+            <div id="card-element" class="form-control">
+              <!-- A Stripe Element will be inserted here. -->
+            </div>
+            <!-- Used to display form errors. -->
+            <div id="card-errors" role="alert" class="text-danger mt-2"></div>
+          </div>
+          
+          <button type="submit" class="btn btn-success w-100">Pay {{formatCurrency invoice.total}}</button>
+        </form>
+        
+        <hr>
+        
+        <p class="text-center text-muted">Or pay using other methods:</p>
+        
+        <!-- Manual Payment Form -->
+        <form action="/invoices/{{invoice._id}}/pay" method="POST">
+          <div class="mb-3">
+            <label for="manualPaymentMethod" class="form-label">Select Method</label>
+            <select class="form-select" id="manualPaymentMethod" name="paymentMethod" required>
+              <option value="Cash">Cash (In Person)</option>
+              <option value="Check">Check</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="PayPal">PayPal</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-outline-secondary w-100">Submit Payment Information</button>
+          <small class="d-block text-center mt-2 text-muted">We will process your payment manually.</small>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const stripe = Stripe('{{stripePublicKey}}');
+    const elements = stripe.elements();
+    
+    // Custom styling can be passed to options when creating an Element.
+    const style = {
+      base: {
+        color: '#32325d',
+        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+        fontSmoothing: 'antialiased',
+        fontSize: '16px',
+        '::placeholder': {
+          color: '#aab7c4'
+        }
+      },
+      invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a'
+      }
+    };
+    
+    // Create an instance of the card Element.
+    const card = elements.create('card', {style: style});
+    
+    // Add an instance of the card Element into the `card-element` <div>.
+    card.mount('#card-element');
+    
+    // Handle real-time validation errors from the card Element.
+    card.on('change', function(event) {
+      const displayError = document.getElementById('card-errors');
+      if (event.error) {
+        displayError.textContent = event.error.message;
+      } else {
+        displayError.textContent = '';
+      }
+    });
+    
+    // Handle form submission.
+    const form = document.getElementById('payment-form');
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      stripe.createToken(card).then(function(result) {
+        if (result.error) {
+          // Inform the user if there was an error.
+          const errorElement = document.getElementById('card-errors');
+          errorElement.textContent = result.error.message;
+        } else {
+          // Send the token to your server.
+          stripeTokenHandler(result.token);
+        }
+      });
+    });
+    
+    // Submit the form with the token ID.
+    function stripeTokenHandler(token) {
+      // Insert the token ID into the form so it gets submitted to the server
+      const form = document.getElementById('payment-form');
+      const hiddenInput = document.createElement('input');
+      hiddenInput.setAttribute('type', 'hidden');
+      hiddenInput.setAttribute('name', 'stripeToken');
+      hiddenInput.setAttribute('value', token.id);
+      form.appendChild(hiddenInput);
+      
+      // Submit the form
+      form.submit();
+    }
+  });
+</script>

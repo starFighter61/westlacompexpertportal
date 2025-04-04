@@ -1,0 +1,84 @@
+<h1 class="h2">New Service Request</h1>
+<p>Submit a new request for service.</p>
+
+<div class="card">
+  <div class="card-body">
+    <form action="/services/add" method="POST">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="deviceType" class="form-label">Device Type</label>
+          <select class="form-select" id="deviceType" name="deviceType" required>
+            <option selected disabled value="">Choose...</option>
+            <option>Laptop</option>
+            <option>Desktop</option>
+            <option>Phone</option>
+            <option>Tablet</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      
+      <h5 class="mt-3">Device Details (Optional)</h5>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label for="brand" class="form-label">Brand</label>
+          <input type="text" class="form-control" id="brand" name="brand">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label for="model" class="form-label">Model</label>
+          <input type="text" class="form-control" id="model" name="model">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label for="serialNumber" class="form-label">Serial Number</label>
+          <input type="text" class="form-control" id="serialNumber" name="serialNumber">
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="issueDescription" class="form-label">Describe the Issue</label>
+        <textarea class="form-control" id="issueDescription" name="issueDescription" rows="4" required></textarea>
+      </div>
+      
+      <div class="mb-3">
+        <label class="form-label">Issue Type (Select all that apply)</label>
+        <div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="issueHardware" name="issueType" value="Hardware">
+            <label class="form-check-label" for="issueHardware">Hardware</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="issueSoftware" name="issueType" value="Software">
+            <label class="form-check-label" for="issueSoftware">Software</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="issueVirus" name="issueType" value="Virus/Malware">
+            <label class="form-check-label" for="issueVirus">Virus/Malware</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="issueData" name="issueType" value="Data Recovery">
+            <label class="form-check-label" for="issueData">Data Recovery</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="issueNetwork" name="issueType" value="Network">
+            <label class="form-check-label" for="issueNetwork">Network</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="issueUpgrade" name="issueType" value="Upgrade">
+            <label class="form-check-label" for="issueUpgrade">Upgrade</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="issueMaintenance" name="issueType" value="Maintenance">
+            <label class="form-check-label" for="issueMaintenance">Maintenance</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="issueOther" name="issueType" value="Other">
+            <label class="form-check-label" for="issueOther">Other</label>
+          </div>
+        </div>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Submit Request</button>
+      <a href="/services" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</div>

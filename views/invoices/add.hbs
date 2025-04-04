@@ -1,0 +1,153 @@
+<h1 class="h2">Create Invoice</h1>
+<p>Create a new invoice for service #{{service._id}}.</p>
+
+<div class="card">
+  <div class="card-body">
+    <form action="/invoices/add/{{service._id}}" method="POST" id="invoice-form">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label for="invoiceNumber" class="form-label">Invoice Number</label>
+          <input type="text" class="form-control" id="invoiceNumber" name="invoiceNumber" value="{{invoiceNumber}}" readonly>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label for="clientName" class="form-label">Client</label>
+          <input type="text" class="form-control" id="clientName" value="{{service.client.name}}" readonly>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label for="dueDate" class="form-label">Due Date</label>
+          <input type="date" class="form-control" id="dueDate" name="dueDate" value="{{dueDate}}" required>
+        </div>
+      </div>
+      
+      <hr>
+      
+      <h5>Invoice Items</h5>
+      <div id="invoice-items">
+        <div class="row invoice-item mb-2">
+          <div class="col-md-5">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control item-description" name="description" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Quantity</label>
+            <input type="number" class="form-control item-quantity" name="quantity" value="1" min="1" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Unit Price</label>
+            <input type="number" step="0.01" class="form-control item-unitPrice" name="unitPrice" required>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
+          </div>
+        </div>
+      </div>
+      
+      <button type="button" id="add-item" class="btn btn-secondary btn-sm mb-3">Add Item</button>
+      
+      <hr>
+      
+      <div class="row justify-content-end">
+        <div class="col-md-4">
+          <div class="mb-2 d-flex justify-content-between">
+            <span>Subtotal:</span>
+            <span id="subtotal">$0.00</span>
+          </div>
+          <div class="mb-2 d-flex justify-content-between">
+            <span>Tax (8.75%):</span>
+            <span id="tax">$0.00</span>
+          </div>
+          <div class="mb-2 d-flex justify-content-between align-items-center">
+            <label for="discount" class="form-label mb-0 me-2">Discount:</label>
+            <input type="number" step="0.01" class="form-control form-control-sm w-50" id="discount" name="discount" value="0">
+          </div>
+          <hr>
+          <div class="mb-2 d-flex justify-content-between fw-bold">
+            <span>Total:</span>
+            <span id="total">$0.00</span>
+          </div>
+        </div>
+      </div>
+      
+      <hr>
+      
+      <div class="mb-3">
+        <label for="notes" class="form-label">Notes (Optional)</label>
+        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Create Invoice</button>
+      <a href="/services/{{service._id}}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const invoiceItemsContainer = document.getElementById('invoice-items');
+    const addItemButton = document.getElementById('add-item');
+    const subtotalElement = document.getElementById('subtotal');
+    const taxElement = document.getElementById('tax');
+    const discountInput = document.getElementById('discount');
+    const totalElement = document.getElementById('total');
+    const taxRate = 0.0875;
+
+    function calculateTotals() {
+      let subtotal = 0;
+      const items = invoiceItemsContainer.querySelectorAll('.invoice-item');
+      
+      items.forEach(item => {
+        const quantityInput = item.querySelector('.item-quantity');
+        const unitPriceInput = item.querySelector('.item-unitPrice');
+        const quantity = parseFloat(quantityInput.value) || 0;
+        const unitPrice = parseFloat(unitPriceInput.value) || 0;
+        subtotal += quantity * unitPrice;
+      });
+      
+      const tax = subtotal * taxRate;
+      const discount = parseFloat(discountInput.value) || 0;
+      const total = subtotal + tax - discount;
+      
+      subtotalElement.textContent = formatCurrency(subtotal);
+      taxElement.textContent = formatCurrency(tax);
+      totalElement.textContent = formatCurrency(total);
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+    }
+
+    addItemButton.addEventListener('click', function() {
+      const newItem = invoiceItemsContainer.querySelector('.invoice-item').cloneNode(true);
+      newItem.querySelectorAll('input').forEach(input => input.value = '');
+      newItem.querySelector('.item-quantity').value = '1';
+      invoiceItemsContainer.appendChild(newItem);
+      attachRemoveListener(newItem.querySelector('.remove-item'));
+      attachInputListeners(newItem);
+    });
+
+    function attachRemoveListener(button) {
+      button.addEventListener('click', function() {
+        if (invoiceItemsContainer.querySelectorAll('.invoice-item').length > 1) {
+          this.closest('.invoice-item').remove();
+          calculateTotals();
+        } else {
+          alert('You must have at least one item.');
+        }
+      });
+    }
+
+    function attachInputListeners(item) {
+      item.querySelectorAll('.item-quantity, .item-unitPrice').forEach(input => {
+        input.addEventListener('input', calculateTotals);
+      });
+    }
+
+    // Initial setup
+    invoiceItemsContainer.querySelectorAll('.invoice-item').forEach(item => {
+      attachRemoveListener(item.querySelector('.remove-item'));
+      attachInputListeners(item);
+    });
+    discountInput.addEventListener('input', calculateTotals);
+    calculateTotals(); // Initial calculation
+  });
+</script>
