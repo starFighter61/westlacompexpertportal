@@ -58,7 +58,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       });
     } 
     // For technicians and admins: show all services, recent invoices, and messages
-    else {
+    else if (req.user.role === 'technician') { // Explicitly check for technician
       const services = await Service.find({})
         .sort({ createdAt: 'desc' })
         .populate('client', 'name email')
@@ -108,6 +108,14 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         statusStats,
         unreadCount
       });
+    } else if (req.user.role === 'admin') { // Add check for admin
+      // Redirect admins to their dedicated dashboard route
+      return res.redirect('/dashboard/admin');
+    } else {
+      // Fallback for any unexpected roles (optional, but good practice)
+      console.error(`Unexpected user role encountered in /dashboard: ${req.user.role}`);
+      req.flash('error_msg', 'An unexpected error occurred.');
+      res.redirect('/login');
     }
   } catch (err) {
     console.error(err);

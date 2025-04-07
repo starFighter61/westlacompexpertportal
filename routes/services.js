@@ -3,6 +3,7 @@ const router = express.Router();
 const { ensureAuthenticated, ensureTechnician, ensureOwnerOrTechnician } = require('../middleware/auth');
 const Service = require('../models/Service');
 const User = require('../models/User');
+const Invoice = require('../models/Invoice'); // Import Invoice model
 
 // @desc    Show all services
 // @route   GET /services
@@ -144,6 +145,15 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
 // @route   DELETE /services/:id
 router.delete('/:id', ensureTechnician, async (req, res) => {
   try {
+    // Check if any invoices are associated with this service
+    const associatedInvoices = await Invoice.find({ service: req.params.id });
+
+    if (associatedInvoices.length > 0) {
+      req.flash('error_msg', 'Cannot delete service with associated invoices. Please delete the invoices first.');
+      return res.redirect(`/services/${req.params.id}`);
+    }
+
+    // If no invoices, proceed with deletion
     await Service.findByIdAndDelete(req.params.id);
     
     req.flash('success_msg', 'Service deleted successfully');

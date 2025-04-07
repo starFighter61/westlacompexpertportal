@@ -10,10 +10,22 @@ module.exports = {
   
   // Ensure user is a guest (not authenticated)
   ensureGuest: function(req, res, next) {
+    console.log('--- ensureGuest Check ---');
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('Request Path:', req.originalUrl);
+    console.log('Session ID:', req.sessionID);
+    // console.log('Session Data:', req.session); // Uncomment carefully - can be verbose
+    console.log('Is Authenticated?:', req.isAuthenticated());
+    console.log('User object:', req.user); // Will be undefined if not authenticated
+    console.log('-------------------------');
+
     if (!req.isAuthenticated()) {
+      console.log('ensureGuest: User is NOT authenticated. Proceeding...');
       return next();
+    } else {
+      console.log('ensureGuest: User IS authenticated. Redirecting to /dashboard...');
+      res.redirect('/dashboard');
     }
-    res.redirect('/dashboard');
   },
   
   // Ensure user is a technician or admin

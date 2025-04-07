@@ -143,5 +143,13 @@ module.exports = {
   // Divide two numbers
   divide: function(a, b) {
     return a / b;
+  },
+
+  // Format number to fixed decimal places
+  toFixed: function(number, digits) {
+    if (typeof number !== 'number') {
+      return number; // Return original value if not a number
+    }
+    return number.toFixed(digits);
   }
 };

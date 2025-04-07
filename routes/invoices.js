@@ -126,15 +126,13 @@ router.post('/add/:serviceId', ensureTechnician, async (req, res) => {
       }
     }
     
-    // Calculate tax (8.75% for Los Angeles)
-    const taxRate = 0.0875;
-    const tax = parseFloat((subtotal * taxRate).toFixed(2));
+    // Tax removed as per requirement
     
     // Calculate discount
     const discount = parseFloat(req.body.discount || 0);
     
     // Calculate total
-    const total = parseFloat((subtotal + tax - discount).toFixed(2));
+    const total = parseFloat((subtotal - discount).toFixed(2));
     
     // Create new invoice
     const newInvoice = new Invoice({
@@ -143,7 +141,7 @@ router.post('/add/:serviceId', ensureTechnician, async (req, res) => {
       invoiceNumber,
       items,
       subtotal,
-      tax,
+      // tax field removed from model
       discount,
       total,
       status: 'Unpaid',
@@ -151,6 +149,18 @@ router.post('/add/:serviceId', ensureTechnician, async (req, res) => {
       dueDate,
       issueDate: Date.now()
     });
+    
+    console.log('--- Creating new invoice with data: ---'); // ADD LOGGING
+    console.log('Service ID:', newInvoice.service);
+    console.log('Client ID:', newInvoice.client);
+    console.log('Invoice Number:', newInvoice.invoiceNumber);
+    console.log('Items:', JSON.stringify(newInvoice.items, null, 2)); // Log items nicely
+    console.log('Subtotal:', newInvoice.subtotal);
+    console.log('Discount:', newInvoice.discount);
+    console.log('Total:', newInvoice.total);
+    console.log('Status:', newInvoice.status);
+    console.log('Due Date:', newInvoice.dueDate);
+    console.log('----------------------------------------'); // ADD LOGGING
     
     await newInvoice.save();
     
@@ -163,7 +173,7 @@ router.post('/add/:serviceId', ensureTechnician, async (req, res) => {
     req.flash('success_msg', 'Invoice created successfully');
     res.redirect(`/invoices/${newInvoice._id}`);
   } catch (err) {
-    console.error(err);
+    console.error('--- ERROR creating invoice:', err); // ADD LOGGING
     res.render('error/500');
   }
 });
@@ -313,10 +323,63 @@ router.post('/:id/pay', ensureAuthenticated, async (req, res) => {
     // For other payment methods (handled manually)
     req.flash('success_msg', 'Payment information received. Our team will process your payment shortly.');
     res.redirect(`/invoices/${req.params.id}`);
-  } catch (err) {
+
+  } catch (err) { // This catch belongs to POST /invoices/:id/pay
     console.error(err);
     req.flash('error_msg', 'Payment failed. Please try again or contact support.');
     res.redirect(`/invoices/${req.params.id}/pay`);
+  }
+}); // End of POST /invoices/:id/pay route
+
+// @desc    Show printable invoice
+// @route   GET /invoices/:id/print
+router.get('/:id/print', ensureAuthenticated, ensureOwnerOrTechnician(Invoice), async (req, res) => {
+  try {
+    const invoice = await Invoice.findById(req.params.id)
+      .populate('client', 'name email phone address') // Populate client details
+      .populate('service', 'deviceType deviceDetails issueDescription') // Populate service details
+      .lean();
+
+    if (!invoice) {
+      return res.render('error/404');
+    }
+
+    // Format dates
+    invoice.formattedIssueDate = moment(invoice.issueDate).format('MM/DD/YYYY');
+    invoice.formattedDueDate = moment(invoice.dueDate).format('MM/DD/YYYY');
+    if (invoice.paymentDate) {
+      invoice.formattedPaymentDate = moment(invoice.paymentDate).format('MM/DD/YYYY');
+    }
+
+    // Render the print view using the print layout
+    res.render('invoices/print', {
+      layout: 'print', // Specify the print layout
+      invoice
+    });
+
+  } catch (err) {
+    console.error('--- ERROR generating printable invoice:', err);
+    res.render('error/500');
+  }
+});
+
+// @desc    Delete invoice
+// @route   DELETE /invoices/:id
+router.delete('/:id', ensureTechnician, async (req, res) => {
+  try {
+    const invoice = await Invoice.findById(req.params.id);
+
+    if (!invoice) {
+      return res.render('error/404');
+    }
+
+    await Invoice.findByIdAndDelete(req.params.id);
+
+    req.flash('success_msg', 'Invoice deleted successfully');
+    res.redirect('/invoices');
+  } catch (err) {
+    console.error('--- ERROR deleting invoice:', err);
+    res.render('error/500');
   }
 });
 
