@@ -4,7 +4,7 @@ const { ensureAuthenticated, ensureTechnician, ensureOwnerOrTechnician } = requi
 const Invoice = require('../models/Invoice');
 const Service = require('../models/Service');
 const User = require('../models/User');
-const moment = require('moment');
+const moment = require('moment-timezone'); // Use moment-timezone
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // @desc    Show all invoices
@@ -36,8 +36,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     
     invoices = invoices.map(invoice => {
       // Format dates
-      invoice.formattedIssueDate = moment(invoice.issueDate).format('MM/DD/YYYY');
-      invoice.formattedDueDate = moment(invoice.dueDate).format('MM/DD/YYYY');
+      invoice.formattedIssueDate = moment(invoice.issueDate).tz('America/Los_Angeles').format('MM/DD/YYYY');
+      invoice.formattedDueDate = moment(invoice.dueDate).tz('America/Los_Angeles').format('MM/DD/YYYY');
       
       // Calculate totals
       totalAmount += invoice.total;
@@ -192,8 +192,8 @@ router.get('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Invoice), async 
     }
     
     // Format dates
-    invoice.formattedIssueDate = moment(invoice.issueDate).format('MM/DD/YYYY');
-    invoice.formattedDueDate = moment(invoice.dueDate).format('MM/DD/YYYY');
+    invoice.formattedIssueDate = moment(invoice.issueDate).tz('America/Los_Angeles').format('MM/DD/YYYY');
+    invoice.formattedDueDate = moment(invoice.dueDate).tz('America/Los_Angeles').format('MM/DD/YYYY');
     
     // Check if invoice is overdue
     invoice.isOverdue = moment().isAfter(invoice.dueDate) && invoice.status === 'Unpaid';
@@ -345,10 +345,10 @@ router.get('/:id/print', ensureAuthenticated, ensureOwnerOrTechnician(Invoice), 
     }
 
     // Format dates
-    invoice.formattedIssueDate = moment(invoice.issueDate).format('MM/DD/YYYY');
-    invoice.formattedDueDate = moment(invoice.dueDate).format('MM/DD/YYYY');
+    invoice.formattedIssueDate = moment(invoice.issueDate).tz('America/Los_Angeles').format('MM/DD/YYYY');
+    invoice.formattedDueDate = moment(invoice.dueDate).tz('America/Los_Angeles').format('MM/DD/YYYY');
     if (invoice.paymentDate) {
-      invoice.formattedPaymentDate = moment(invoice.paymentDate).format('MM/DD/YYYY');
+      invoice.formattedPaymentDate = moment(invoice.paymentDate).tz('America/Los_Angeles').format('MM/DD/YYYY');
     }
 
     // Render the print view using the print layout

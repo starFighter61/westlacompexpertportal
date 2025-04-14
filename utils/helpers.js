@@ -1,9 +1,10 @@
-const moment = require('moment');
+const moment = require('moment-timezone'); // Use moment-timezone
 
 module.exports = {
   // Format date
-  formatDate: function(date, format) {
-    return moment(date).format(format);
+  formatDate: function(date, format, tz = 'America/Los_Angeles') { // Add timezone parameter with default
+    // Convert to the specified timezone before formatting
+    return moment(date).tz(tz).format(format);
   },
 
   // Truncate text
