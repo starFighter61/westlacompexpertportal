@@ -41,12 +41,14 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         .populate('service', 'deviceType')
         .lean();
       
-      // Count unread messages
-      const unreadCount = await Conversation.countDocuments({
-        participants: req.user._id,
-        lastMessage: { $exists: true },
-        'lastMessage.readBy': { $not: { $elemMatch: { user: req.user._id } } }
-      });
+      // Calculate unread messages from populated conversations
+      let unreadCount = 0;
+      if (conversations && conversations.length > 0) {
+        unreadCount = conversations.filter(conv =>
+          conv.lastMessage && // Check if lastMessage exists
+          !conv.lastMessage.readBy.some(reader => reader.user.equals(req.user._id)) // Check if current user is NOT in readBy
+        ).length;
+      }
       
       res.render('dashboard/client', {
         name: req.user.name,
