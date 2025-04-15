@@ -2,13 +2,20 @@ const moment = require('moment-timezone'); // Use moment-timezone
 
 module.exports = {
   // Format date
-  formatDate: function(date, format, tz = 'America/Los_Angeles') {
-    const momentDate = moment(date); // Create moment object first
-    if (!date || !momentDate.isValid()) { // Check if date exists and is valid
-      return 'N/A'; // Return placeholder if invalid or missing
+  formatDate: function(date, format, tzArg) { // Use tzArg to avoid conflict with default logic
+    let timezone = 'America/Los_Angeles'; // Default timezone
+    // Check if the third argument was provided and is a valid string timezone
+    if (typeof tzArg === 'string' && tzArg.length > 0) {
+      timezone = tzArg; // Use the provided timezone string
     }
-    // If valid, convert to the specified timezone before formatting
-    return momentDate.tz(tz).format(format);
+    // Otherwise, tzArg is likely the Handlebars options object or undefined, so we stick with the default 'America/Los_Angeles'
+
+    const momentDate = moment(date);
+    if (!date || !momentDate.isValid()) {
+      return 'N/A';
+    }
+    // Use the determined timezone string
+    return momentDate.tz(timezone).format(format);
   },
 
   // Truncate text
