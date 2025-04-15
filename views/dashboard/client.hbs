@@ -47,7 +47,7 @@
                 <div>
                   <a href="/invoices/{{_id}}">Invoice #{{invoiceNumber}}</a>
                   <small class="d-block text-muted">
-                    Due: {{formatDate dueDate 'MM/DD/YYYY' null}} | Total: {{formatCurrency total}}
+                    Due: {{formatDate dueDate 'MM/DD/YYYY'}} | Total: {{formatCurrency total}}
                   </small>
                 </div>
                 <span class="badge {{#ifEquals status 'Paid'}}bg-success{{else ifEquals status 'Overdue'}}bg-danger{{else}}bg-warning{{/ifEquals}} rounded-pill">{{status}}</span>
@@ -78,7 +78,7 @@
                 <a href="/messages/{{_id}}">{{subject}}</a>
                 {{#if lastMessage}}
                   <small class="d-block text-muted">
-                    Last message: {{formatDate lastMessage.createdAt 'MM/DD/YYYY h:mm A' null}}
+                    Last message: {{formatDate lastMessage.createdAt 'MM/DD/YYYY h:mm A'}}
                   </small>
                 {{/if}}
               </li>
@@ -110,7 +110,7 @@
                     <i class="fas {{getFileIcon mimetype}} me-2"></i>{{name}}
                   </a>
                   <small class="d-block text-muted">
-                    Uploaded: {{formatDate createdAt 'MM/DD/YYYY' null}} | Size: {{formatFileSize size}}
+                    Uploaded: {{formatDate createdAt 'MM/DD/YYYY'}} | Size: {{formatFileSize size}}
                   </small>
                 </div>
                 <a href="/documents/{{_id}}/download" class="btn btn-sm btn-outline-secondary">
