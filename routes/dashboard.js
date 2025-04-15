@@ -17,20 +17,23 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         .sort({ createdAt: 'desc' })
         .populate('technician', 'name')
         .lean();
-      
+      console.log('Client Services Fetched:', services ? services.length : 'null'); // Added log
+
       const invoices = await Invoice.find({ client: req.user._id })
         .sort({ createdAt: 'desc' })
         .populate('service', 'deviceType issueDescription')
         .lean();
-      
-      const conversations = await Conversation.find({ 
-        participants: req.user._id 
+      console.log('Client Invoices Fetched:', invoices ? invoices.length : 'null'); // Added log
+
+      const conversations = await Conversation.find({
+        participants: req.user._id
       })
         .sort({ updatedAt: 'desc' })
-        .populate('lastMessage')
+        .populate('lastMessage') // Populate lastMessage here
         .populate('service', 'deviceType')
         .lean();
-      
+      console.log('Client Conversations Fetched:', conversations ? conversations.length : 'null'); // Added log
+
       const documents = await Document.find({
         $or: [
           { client: req.user._id },
@@ -40,16 +43,20 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         .sort({ createdAt: 'desc' })
         .populate('service', 'deviceType')
         .lean();
-      
+      console.log('Client Documents Fetched:', documents ? documents.length : 'null'); // Added log
+
       // Calculate unread messages from populated conversations
       let unreadCount = 0;
       if (conversations && conversations.length > 0) {
         unreadCount = conversations.filter(conv =>
-          conv.lastMessage && // Check if lastMessage exists
-          !conv.lastMessage.readBy.some(reader => reader.user.equals(req.user._id)) // Check if current user is NOT in readBy
+          conv.lastMessage && // Check if lastMessage exists and is populated
+          conv.lastMessage.readBy && // Check if readBy exists on the populated message
+          !conv.lastMessage.readBy.some(reader => reader.user && reader.user.equals(req.user._id)) // Check if current user is NOT in readBy
         ).length;
       }
-      
+      console.log('Calculated Unread Count:', unreadCount); // Added log (Moved outside the if block)
+
+      console.log('Attempting to render client dashboard...'); // Added log
       res.render('dashboard/client', {
         name: req.user.name,
         services,
@@ -58,7 +65,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         documents,
         unreadCount
       });
-    } 
+    }
     // For technicians and admins: show all services, recent invoices, and messages
     else if (req.user.role === 'technician') { // Explicitly check for technician
       const services = await Service.find({})
@@ -66,14 +73,14 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         .populate('client', 'name email')
         .populate('technician', 'name')
         .lean();
-      
+
       const recentInvoices = await Invoice.find({})
         .sort({ createdAt: 'desc' })
         .limit(5)
         .populate('client', 'name')
         .populate('service', 'deviceType')
         .lean();
-      
+
       const conversations = await Conversation.find({
         participants: req.user._id
       })
@@ -82,25 +89,31 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         .populate('participants', 'name role')
         .populate('service', 'deviceType')
         .lean();
-      
+
       // Count services by status
       const statusCounts = await Service.aggregate([
         { $group: { _id: '$status', count: { $sum: 1 } } }
       ]);
-      
+
       // Format status counts
       const statusStats = {};
       statusCounts.forEach(status => {
         statusStats[status._id] = status.count;
       });
-      
-      // Count unread messages
-      const unreadCount = await Conversation.countDocuments({
-        participants: req.user._id,
-        lastMessage: { $exists: true },
-        'lastMessage.readBy': { $not: { $elemMatch: { user: req.user._id } } }
-      });
-      
+
+      // Count unread messages (Technician - original logic might be okay here if needed, or adapt client logic)
+      // For consistency, let's adapt the client logic for technicians too
+      let unreadCount = 0;
+       if (conversations && conversations.length > 0) {
+        unreadCount = conversations.filter(conv =>
+          conv.lastMessage &&
+          conv.lastMessage.readBy &&
+          !conv.lastMessage.readBy.some(reader => reader.user && reader.user.equals(req.user._id))
+        ).length;
+      }
+      console.log('Technician Unread Count:', unreadCount);
+
+
       res.render('dashboard/technician', {
         name: req.user.name,
         role: req.user.role,
@@ -120,7 +133,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       res.redirect('/login');
     }
   } catch (err) {
-    console.error(err);
+    console.error('Error in GET /dashboard:', err); // Added context to error log
     res.render('error/500');
   }
 });
@@ -138,7 +151,7 @@ router.get('/profile', ensureAuthenticated, (req, res) => {
 router.put('/profile', ensureAuthenticated, async (req, res) => {
   try {
     const { name, email, phone, street, city, state, zipCode } = req.body;
-    
+
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       {
@@ -154,11 +167,11 @@ router.put('/profile', ensureAuthenticated, async (req, res) => {
       },
       { new: true }
     );
-    
+
     req.flash('success_msg', 'Profile updated successfully');
     res.redirect('/dashboard/profile');
   } catch (err) {
-    console.error(err);
+    console.error('Error updating profile:', err);
     req.flash('error_msg', 'Error updating profile');
     res.redirect('/dashboard/profile');
   }
@@ -171,11 +184,11 @@ router.get('/admin', ensureAdmin, async (req, res) => {
     // Get user counts
     const clientCount = await User.countDocuments({ role: 'client' });
     const technicianCount = await User.countDocuments({ role: 'technician' });
-    
+
     // Get service counts
     const serviceCount = await Service.countDocuments();
     const completedServiceCount = await Service.countDocuments({ status: 'Completed' });
-    
+
     // Get invoice stats
     const invoiceStats = await Invoice.aggregate([
       { $group: {
@@ -193,7 +206,7 @@ router.get('/admin', ensureAdmin, async (req, res) => {
         }
       }}
     ]);
-    
+
     res.render('dashboard/admin', {
       clientCount,
       technicianCount,
@@ -202,7 +215,7 @@ router.get('/admin', ensureAdmin, async (req, res) => {
       invoiceStats: invoiceStats[0] || { totalAmount: 0, paidAmount: 0, unpaidAmount: 0 }
     });
   } catch (err) {
-    console.error(err);
+    console.error('Error in GET /dashboard/admin:', err);
     res.render('error/500');
   }
 });
