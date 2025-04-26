@@ -137,10 +137,13 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
     const invoice = await Invoice.findOne({ service: service._id });
 
     if (invoice) {
-      // Update invoice items based on service details (example - adjust as needed)
-      invoice.items = [{ description: service.issueDescription, quantity: 1, unitPrice: service.estimatedCost || 0, amount: service.estimatedCost || 0 }];
-      invoice.subtotal = service.estimatedCost || 0;
-      invoice.total = service.estimatedCost || 0;
+      // Add new item to invoice based on service details
+      const estimatedCost = Number(service.estimatedCost) || 0; // Ensure it's a number
+      invoice.items.push({ description: service.issueDescription, quantity: 1, unitPrice: estimatedCost, amount: estimatedCost });
+
+      // Recalculate subtotal and total
+      invoice.subtotal = invoice.items.reduce((acc, item) => acc + item.amount, 0);
+      invoice.total = invoice.subtotal - (invoice.discount || 0);
 
       await invoice.save();
     }
