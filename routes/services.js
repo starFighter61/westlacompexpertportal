@@ -145,9 +145,18 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
       console.log('Invoice ID:', invoice._id); // ADD LOGGING
       console.log('Invoice before update:', JSON.stringify(invoice, null, 2)); // ADD LOGGING
 
-      // Add new item to invoice based on service details
+      // Update or add item to invoice based on service details
       const estimatedCost = Number(service.estimatedCost) || 0; // Ensure it's a number
-      invoice.items.push({ description: service.issueDescription, quantity: 1, unitPrice: estimatedCost, amount: estimatedCost });
+      const existingItemIndex = invoice.items.findIndex(item => item.description === service.issueDescription);
+
+      if (existingItemIndex > -1) {
+        // Update existing item
+        invoice.items[existingItemIndex].unitPrice = estimatedCost;
+        invoice.items[existingItemIndex].amount = estimatedCost;
+      } else {
+        // Add new item
+        invoice.items.push({ description: service.issueDescription, quantity: 1, unitPrice: estimatedCost, amount: estimatedCost });
+      }
 
       // Recalculate subtotal and total
       invoice.subtotal = invoice.items.reduce((acc, item) => acc + item.amount, 0);
