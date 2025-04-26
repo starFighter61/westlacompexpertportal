@@ -49,6 +49,7 @@ router.post('/add', ensureAuthenticated, async (req, res) => {
     const { deviceType, brand, model, serialNumber, issueDescription, issueType } = req.body;
     
     // Create new service
+    console.log('Creating new service...'); // ADD LOGGING
     const newService = new Service({
       client: req.user._id,
       deviceType,
@@ -61,7 +62,9 @@ router.post('/add', ensureAuthenticated, async (req, res) => {
       issueType: Array.isArray(issueType) ? issueType : [issueType],
       status: 'New'
     });
+    console.log('New service created:', newService); // ADD LOGGING
     
+    console.log('Saving new service...'); // ADD LOGGING
     await newService.save();
     
     req.flash('success_msg', 'Service request submitted successfully');
@@ -136,7 +139,12 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
     // Find and update associated invoice
     const invoice = await Invoice.findOne({ service: service._id });
 
+    console.log('Service ID:', service._id); // ADD LOGGING
+
     if (invoice) {
+      console.log('Invoice ID:', invoice._id); // ADD LOGGING
+      console.log('Invoice before update:', JSON.stringify(invoice, null, 2)); // ADD LOGGING
+
       // Add new item to invoice based on service details
       const estimatedCost = Number(service.estimatedCost) || 0; // Ensure it's a number
       invoice.items.push({ description: service.issueDescription, quantity: 1, unitPrice: estimatedCost, amount: estimatedCost });
@@ -144,6 +152,8 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
       // Recalculate subtotal and total
       invoice.subtotal = invoice.items.reduce((acc, item) => acc + item.amount, 0);
       invoice.total = invoice.subtotal - (invoice.discount || 0);
+
+      console.log('Invoice after update:', JSON.stringify(invoice, null, 2)); // ADD LOGGING
 
       await invoice.save();
     }
