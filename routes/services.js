@@ -151,6 +151,7 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
 
       if (existingItemIndex > -1) {
         // Update existing item
+        invoice.items[existingItemIndex].description = service.issueDescription;
         invoice.items[existingItemIndex].unitPrice = estimatedCost;
         invoice.items[existingItemIndex].amount = estimatedCost;
       } else {
@@ -162,6 +163,12 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
       invoice.subtotal = invoice.items.reduce((acc, item) => acc + item.amount, 0);
       invoice.total = invoice.subtotal - (invoice.discount || 0);
 
+      console.log('Service issueDescription:', service.issueDescription); // ADD LOGGING
+      console.log('Service estimatedCost:', service.estimatedCost); // ADD LOGGING
+      console.log('Invoice items before update:', JSON.stringify(invoice.items, null, 2)); // ADD LOGGING
+      console.log('Invoice subtotal before update:', invoice.subtotal); // ADD LOGGING
+      console.log('Invoice discount:', invoice.discount); // ADD LOGGING
+      console.log('Invoice total before update:', invoice.total); // ADD LOGGING
       console.log('Invoice after update:', JSON.stringify(invoice, null, 2)); // ADD LOGGING
 
       await invoice.save();
