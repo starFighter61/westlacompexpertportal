@@ -132,7 +132,19 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
     service.updatedAt = Date.now();
     
     await service.save();
-    
+
+    // Find and update associated invoice
+    const invoice = await Invoice.findOne({ service: service._id });
+
+    if (invoice) {
+      // Update invoice items based on service details (example - adjust as needed)
+      invoice.items = [{ description: service.issueDescription, quantity: 1, unitPrice: service.estimatedCost || 0, amount: service.estimatedCost || 0 }];
+      invoice.subtotal = service.estimatedCost || 0;
+      invoice.total = service.estimatedCost || 0;
+
+      await invoice.save();
+    }
+
     req.flash('success_msg', 'Service updated successfully');
     res.redirect(`/services/${req.params.id}`);
   } catch (err) {
