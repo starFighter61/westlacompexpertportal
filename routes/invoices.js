@@ -119,7 +119,8 @@ router.post('/add/:serviceId', ensureTechnician, async (req, res) => {
           description: descriptions[i],
           quantity,
           unitPrice,
-          amount
+          amount,
+          service: service._id // ADD THIS LINE
         });
         
         subtotal += amount;
