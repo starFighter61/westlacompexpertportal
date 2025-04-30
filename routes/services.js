@@ -109,11 +109,15 @@ router.get('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
 // @route   PUT /services/:id
 router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async (req, res) => {
   try {
+    console.log('Updating service with id:', req.params.id); // ADD LOGGING
     const { status, technician, estimatedCompletionDate, estimatedCost, noteText } = req.body;
+    console.log('Request body:', req.body); // ADD LOGGING
     
     const service = await Service.findById(req.params.id);
+    console.log('Service found:', service); // ADD LOGGING
     
     if (!service) {
+      console.log('Service not found'); // ADD LOGGING
       return res.render('error/404');
     }
     
@@ -122,6 +126,7 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
     if (technician) service.technician = technician;
     if (estimatedCompletionDate) service.estimatedCompletionDate = estimatedCompletionDate;
     if (estimatedCost) service.estimatedCost = estimatedCost;
+    console.log('Service updated:', service); // ADD LOGGING
     
     // Add note if provided
     if (noteText) {
@@ -131,22 +136,26 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
         isPublic: req.body.isPublic === 'on'
       });
     }
+    console.log('Notes added:', service.notes); // ADD LOGGING
     
     service.updatedAt = Date.now();
+    console.log('UpdatedAt set:', service.updatedAt); // ADD LOGGING
     
     await service.save();
+    console.log('Service saved:', service); // ADD LOGGING
 
     // Find and update associated invoice
     const invoice = await Invoice.findOne({ service: service._id });
-
-    console.log('Service ID:', service._id); // ADD LOGGING
+    console.log('Invoice found:', invoice); // ADD LOGGING
 
     if (invoice) {
-      console.log('Invoice ID:', invoice._id); // ADD LOGGING
-      console.log('Invoice before update:', JSON.stringify(invoice, null, 2)); // ADD LOGGING
+      console.log('Updating invoice with id:', invoice._id); // ADD LOGGING
 
       // Update or add item to invoice based on service details
-      const estimatedCost = Number(service.estimatedCost) || 0; // Ensure it's a number
+      let estimatedCost = Number(service.estimatedCost) || 0; // Ensure it's a number
+      if (isNaN(estimatedCost)) {
+        estimatedCost = 0;
+      }
       const existingItemIndex = invoice.items.findIndex(item => item.description === service.issueDescription);
 
       if (existingItemIndex > -1) {
@@ -154,24 +163,21 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
         invoice.items[existingItemIndex].description = service.issueDescription;
         invoice.items[existingItemIndex].unitPrice = estimatedCost;
         invoice.items[existingItemIndex].amount = estimatedCost;
+        console.log('Existing invoice item updated:', invoice.items[existingItemIndex]); // ADD LOGGING
       } else {
         // Add new item
         invoice.items.push({ description: service.issueDescription, quantity: 1, unitPrice: estimatedCost, amount: estimatedCost });
+        console.log('New invoice item added:', invoice.items[invoice.items.length - 1]); // ADD LOGGING
       }
 
       // Recalculate subtotal and total
       invoice.subtotal = invoice.items.reduce((acc, item) => acc + item.amount, 0);
       invoice.total = invoice.subtotal - (invoice.discount || 0);
-
-      console.log('Service issueDescription:', service.issueDescription); // ADD LOGGING
-      console.log('Service estimatedCost:', service.estimatedCost); // ADD LOGGING
-      console.log('Invoice items before update:', JSON.stringify(invoice.items, null, 2)); // ADD LOGGING
-      console.log('Invoice subtotal before update:', invoice.subtotal); // ADD LOGGING
-      console.log('Invoice discount:', invoice.discount); // ADD LOGGING
-      console.log('Invoice total before update:', invoice.total); // ADD LOGGING
-      console.log('Invoice after update:', JSON.stringify(invoice, null, 2)); // ADD LOGGING
+      console.log('Invoice subtotal:', invoice.subtotal); // ADD LOGGING
+      console.log('Invoice total:', invoice.total); // ADD LOGGING
 
       await invoice.save();
+      console.log('Invoice saved:', invoice); // ADD LOGGING
     }
 
     req.flash('success_msg', 'Service updated successfully');
