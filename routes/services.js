@@ -156,7 +156,7 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
       if (isNaN(estimatedCost)) {
         estimatedCost = 0;
       }
-      const existingItemIndex = invoice.items.findIndex(item => item.description === service.issueDescription);
+      const existingItemIndex = invoice.items.findIndex(item => item.service && item.service.toString() === service._id.toString());
 
       if (existingItemIndex > -1) {
         // Update existing item
@@ -166,7 +166,13 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
         console.log('Existing invoice item updated:', invoice.items[existingItemIndex]); // ADD LOGGING
       } else {
         // Add new item
-        invoice.items.push({ description: service.issueDescription, quantity: 1, unitPrice: estimatedCost, amount: estimatedCost });
+        invoice.items.push({
+          description: service.issueDescription,
+          quantity: 1,
+          unitPrice: estimatedCost,
+          amount: estimatedCost,
+          service: service._id
+        });
         console.log('New invoice item added:', invoice.items[invoice.items.length - 1]); // ADD LOGGING
       }
 
