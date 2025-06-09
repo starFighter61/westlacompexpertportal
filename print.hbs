@@ -1,0 +1,118 @@
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-6">
+      <h1 class="h3">West LA Computer Expert</h1>
+      <p>
+        123 Tech Street<br>
+        Los Angeles, CA 90025<br>
+        Phone: (310) 555-1234<br>
+        Email: support@westlacompexpert.com
+      </p>
+    </div>
+    <div class="col-6 text-end">
+      <h2 class="h1">INVOICE</h2>
+      <p>
+        <strong>Invoice #:</strong> {{invoice.invoiceNumber}}<br>
+        <strong>Issue Date:</strong> {{invoice.formattedIssueDate}}<br>
+        <strong>Due Date:</strong> {{invoice.formattedDueDate}}
+      </p>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row mb-4">
+    <div class="col-6">
+      <h5 class="mb-3">Bill To:</h5>
+      <p>
+        <strong>{{invoice.client.name}}</strong><br>
+        {{#if invoice.client.address}}
+          {{invoice.client.address.street}}<br>
+          {{invoice.client.address.city}}, {{invoice.client.address.state}} {{invoice.client.address.zip}}<br>
+        {{/if}}
+        {{invoice.client.email}}<br>
+        {{#if invoice.client.phone}}
+          {{invoice.client.phone}}
+        {{/if}}
+      </p>
+    </div>
+    <div class="col-6">
+      <h5 class="mb-3">Service Details:</h5>
+      <p>
+        <strong>Device:</strong> {{invoice.service.deviceType}}<br>
+        {{#if invoice.service.deviceDetails}}
+          <strong>Details:</strong> {{invoice.service.deviceDetails}}<br>
+        {{/if}}
+        <strong>Issue:</strong> {{invoice.service.issueDescription}}
+      </p>
+    </div>
+  </div>
+
+  <table class="table table-bordered mb-4">
+    <thead class="table-light">
+      <tr>
+        <th>Description</th>
+        <th class="text-end">Quantity</th>
+        <th class="text-end">Unit Price</th>
+        <th class="text-end">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each invoice.items}}
+      <tr>
+        <td>{{this.description}}</td>
+        <td class="text-end">{{this.quantity}}</td>
+        <td class="text-end">${{toFixed this.unitPrice 2}}</td>
+        <td class="text-end">${{toFixed this.amount 2}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+        <td class="text-end">${{toFixed invoice.subtotal 2}}</td>
+      </tr>
+      {{#if invoice.discount}}
+      <tr>
+        <td colspan="3" class="text-end"><strong>Discount:</strong></td>
+        <td class="text-end">-${{toFixed invoice.discount 2}}</td>
+      </tr>
+      {{/if}}
+      <tr>
+        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+        <td class="text-end"><strong>${{toFixed invoice.total 2}}</strong></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="row mb-4">
+    <div class="col-6">
+      {{#if invoice.notes}}
+        <h5 class="mb-2">Notes:</h5>
+        <p>{{invoice.notes}}</p>
+      {{/if}}
+    </div>
+    <div class="col-6 text-end">
+      <h5 class="mb-2">Status:</h5>
+      <p class="fw-bold {{#ifEquals invoice.status 'Paid'}}text-success{{else}}text-danger{{/ifEquals}}">
+        {{invoice.status}}
+      </p>
+      {{#ifEquals invoice.status 'Paid'}}
+        <p>
+          <strong>Payment Date:</strong> {{invoice.formattedPaymentDate}}<br>
+          <strong>Payment Method:</strong> {{invoice.paymentMethod}}<br>
+          {{#if invoice.paymentReference}}
+            <strong>Reference:</strong> {{invoice.paymentReference}}
+          {{/if}}
+        </p>
+      {{/ifEquals}}
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="text-center text-muted">
+      <p>I accept Venmo:user: dan-zivetz. last four of phone number if needed: 8093 Zelle: 310 850 8093 check: made out to Daniel Zivetz, mail to: 2829 Greenfield Ave. LA CA 90064 or Cash.</p>
+      <p>Thank you for your business!</p>
+    </div>
+</div>
