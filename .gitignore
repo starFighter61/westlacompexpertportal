@@ -17,6 +17,11 @@ logs
 .DS_Store
 Thumbs.db
 
+# MongoDB installers and tools
+*.msi
+*.zip
+mongodb-database-tools-windows-x86_64-100.9.4/
+
 # Editor directories and files
 .vscode/
 *.suo
