@@ -10,14 +10,14 @@ const Invoice = require('../models/Invoice'); // Import Invoice model
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     let services;
-    
+
     // If client, show only their services
     if (req.user.role === 'client') {
       services = await Service.find({ client: req.user._id })
         .populate('technician', 'name')
         .sort({ createdAt: 'desc' })
         .lean();
-    } 
+    }
     // If technician or admin, show all services
     else {
       services = await Service.find({})
@@ -26,7 +26,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         .sort({ createdAt: 'desc' })
         .lean();
     }
-    
+
     res.render('services/index', {
       services
     });
@@ -47,7 +47,7 @@ router.get('/add', ensureAuthenticated, (req, res) => {
 router.post('/add', ensureAuthenticated, async (req, res) => {
   try {
     const { deviceType, brand, model, serialNumber, issueDescription, issueType } = req.body;
-    
+
     // Create new service
     console.log('Creating new service...'); // ADD LOGGING
     const newService = new Service({
@@ -63,10 +63,10 @@ router.post('/add', ensureAuthenticated, async (req, res) => {
       status: 'New'
     });
     console.log('New service created:', newService); // ADD LOGGING
-    
+
     console.log('Saving new service...'); // ADD LOGGING
     await newService.save();
-    
+
     req.flash('success_msg', 'Service request submitted successfully');
     res.redirect('/services');
   } catch (err) {
@@ -83,16 +83,16 @@ router.get('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
       .populate('client', 'name email phone')
       .populate('technician', 'name')
       .lean();
-    
+
     if (!service) {
       return res.render('error/404');
     }
-    
+
     // Get technicians for assignment
     const technicians = await User.find({ role: { $in: ['technician', 'admin'] } })
       .select('name')
       .lean();
-    
+
     res.render('services/show', {
       service,
       technicians,
@@ -112,22 +112,24 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
     console.log('Updating service with id:', req.params.id); // ADD LOGGING
     const { status, technician, estimatedCompletionDate, estimatedCost, noteText } = req.body;
     console.log('Request body:', req.body); // ADD LOGGING
-    
+
     const service = await Service.findById(req.params.id);
     console.log('Service found:', service); // ADD LOGGING
-    
+
     if (!service) {
       console.log('Service not found'); // ADD LOGGING
       return res.render('error/404');
     }
-    
+
     // Update service fields
     if (status) service.status = status;
     if (technician) service.technician = technician;
     if (estimatedCompletionDate) service.estimatedCompletionDate = estimatedCompletionDate;
-    if (estimatedCost) service.estimatedCost = estimatedCost;
+    if (estimatedCost !== undefined && estimatedCost !== '') {
+      service.estimatedCost = parseFloat(estimatedCost);
+    }
     console.log('Service updated:', service); // ADD LOGGING
-    
+
     // Add note if provided
     if (noteText) {
       service.notes.push({
@@ -137,10 +139,10 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
       });
     }
     console.log('Notes added:', service.notes); // ADD LOGGING
-    
+
     service.updatedAt = Date.now();
     console.log('UpdatedAt set:', service.updatedAt); // ADD LOGGING
-    
+
     await service.save();
     console.log('Service saved:', service); // ADD LOGGING
 
@@ -212,7 +214,7 @@ router.delete('/:id', ensureTechnician, async (req, res) => {
 
     // If no invoices, proceed with deletion
     await Service.findByIdAndDelete(req.params.id);
-    
+
     req.flash('success_msg', 'Service deleted successfully');
     res.redirect('/services');
   } catch (err) {
@@ -226,23 +228,23 @@ router.delete('/:id', ensureTechnician, async (req, res) => {
 router.get('/status/:status', ensureAuthenticated, async (req, res) => {
   try {
     const validStatuses = ['New', 'Diagnosing', 'Awaiting Approval', 'In Progress', 'Ready for Pickup', 'Completed', 'Cancelled'];
-    
+
     if (!validStatuses.includes(req.params.status)) {
       return res.render('error/404');
     }
-    
+
     let services;
-    
+
     // If client, show only their services with the specified status
     if (req.user.role === 'client') {
-      services = await Service.find({ 
+      services = await Service.find({
         client: req.user._id,
         status: req.params.status
       })
         .populate('technician', 'name')
         .sort({ createdAt: 'desc' })
         .lean();
-    } 
+    }
     // If technician or admin, show all services with the specified status
     else {
       services = await Service.find({ status: req.params.status })
@@ -251,7 +253,7 @@ router.get('/status/:status', ensureAuthenticated, async (req, res) => {
         .sort({ createdAt: 'desc' })
         .lean();
     }
-    
+
     res.render('services/index', {
       services,
       status: req.params.status
