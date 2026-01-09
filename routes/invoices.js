@@ -70,15 +70,6 @@ router.get('/add/:serviceId', ensureTechnician, async (req, res) => {
       .populate('client', 'name email')
       .lean();
 
-    // DEBUG: Log service data
-    console.log('=== DEBUG: Invoice Add Page ===');
-    console.log('Service ID:', req.params.serviceId);
-    console.log('Service found:', service ? 'YES' : 'NO');
-    console.log('Service issueDescription:', service?.issueDescription);
-    console.log('Service estimatedCost:', service?.estimatedCost);
-    console.log('Full service object:', JSON.stringify(service, null, 2));
-    console.log('================================');
-
     if (!service) {
       return res.render('error/404');
     }
