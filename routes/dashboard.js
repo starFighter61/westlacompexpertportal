@@ -271,6 +271,19 @@ router.get('/admin', ensureAdmin, async (req, res) => {
       chartValues.push(item.revenue);
     });
 
+    // Yearly income breakdown (always shows all years, independent of timeframe filter)
+    const yearlyIncome = await Invoice.aggregate([
+      { $match: { status: 'Paid' } },
+      {
+        $group: {
+          _id: { $year: { date: '$issueDate', timezone: 'America/Los_Angeles' } },
+          totalIncome: { $sum: '$total' },
+          invoiceCount: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: -1 } }
+    ]);
+
     res.render('dashboard/admin', {
       clientCount,
       technicianCount,
@@ -278,7 +291,8 @@ router.get('/admin', ensureAdmin, async (req, res) => {
       completedServiceCount,
       invoiceStats: invoiceStats[0] || { totalAmount: 0, paidAmount: 0, unpaidAmount: 0 },
       timeframe,
-      chartData: JSON.stringify({ labels: chartLabels, values: chartValues })
+      chartData: JSON.stringify({ labels: chartLabels, values: chartValues }),
+      yearlyIncome
     });
   } catch (err) {
     console.error('Error in GET /dashboard/admin:', err);

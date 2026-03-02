@@ -57,6 +57,44 @@
   </div>
 </div>
 
+
+<!-- Yearly Income Breakdown -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0"><i class="fas fa-calendar-alt text-success me-2"></i>Yearly Income Summary</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Year</th>
+                <th>Paid Invoices</th>
+                <th class="text-end">Total Income</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each yearlyIncome}}
+              <tr>
+                <td><strong>{{this._id}}</strong></td>
+                <td>{{this.invoiceCount}}</td>
+                <td class="text-end fw-bold text-success">{{formatCurrency this.totalIncome}}</td>
+              </tr>
+              {{else}}
+              <tr>
+                <td colspan="3" class="text-center text-muted py-3">No paid invoices found.</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Revenue Chart Row -->
 <div class="row mb-4">
   <div class="col-12">
