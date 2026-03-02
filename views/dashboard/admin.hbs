@@ -89,12 +89,12 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const rawChartData = {{{ chartData }
+    var rawChartData = {{{ chartData }
   }};
   console.log("Chart Data:", rawChartData);
 
   if (rawChartData && rawChartData.labels.length > 0) {
-    const ctx = document.getElementById('revenueChart').getContext('2d');
+    var ctx = document.getElementById('revenueChart').getContext('2d');
     new Chart(ctx, {
       type: 'line',
       data: {
@@ -114,12 +114,12 @@
         plugins: {
           legend: {
             display: true,
-            position: 'top',
+            position: 'top'
           },
           tooltip: {
             callbacks: {
               label: function (context) {
-                let label = context.dataset.label || '';
+                var label = context.dataset.label || '';
                 if (label) {
                   label += ': ';
                 }
@@ -135,7 +135,7 @@
           y: {
             beginAtZero: true,
             ticks: {
-              callback: function (value, index, values) {
+              callback: function (value) {
                 return '$' + value;
               }
             }
@@ -144,12 +144,11 @@
       }
     });
   } else {
-    // Handle empty data case
-    const ctx = document.getElementById('revenueChart').getContext('2d');
-    ctx.font = '16px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#666';
-    ctx.fillText('No revenue data available for this timeframe.', 200, 50);
+    var ctx2 = document.getElementById('revenueChart').getContext('2d');
+    ctx2.font = '16px Arial';
+    ctx2.textAlign = 'center';
+    ctx2.fillStyle = '#666';
+    ctx2.fillText('No revenue data available for this timeframe.', 200, 50);
   }
   });
 </script>
