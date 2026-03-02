@@ -104,7 +104,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       // Count unread messages (Technician - original logic might be okay here if needed, or adapt client logic)
       // For consistency, let's adapt the client logic for technicians too
       let unreadCount = 0;
-       if (conversations && conversations.length > 0) {
+      if (conversations && conversations.length > 0) {
         unreadCount = conversations.filter(conv =>
           conv.lastMessage &&
           conv.lastMessage.readBy &&
@@ -181,38 +181,103 @@ router.put('/profile', ensureAuthenticated, async (req, res) => {
 // @route   GET /dashboard/admin
 router.get('/admin', ensureAdmin, async (req, res) => {
   try {
+    const timeframe = req.query.timeframe || 'all'; // Default to 'all'
+    let startDate;
+    let endDate = moment().tz('America/Los_Angeles').endOf('day').toDate();
+
+    if (timeframe === 'year') {
+      startDate = moment().tz('America/Los_Angeles').startOf('year').toDate();
+    } else if (timeframe === 'month') {
+      startDate = moment().tz('America/Los_Angeles').startOf('month').toDate();
+    } else if (timeframe === 'week') {
+      startDate = moment().tz('America/Los_Angeles').startOf('week').toDate();
+    } // If 'all', startDate remains undefined
+
+    // Build query filter
+    const dateFilter = {};
+    if (startDate) {
+      dateFilter.createdAt = { $gte: startDate, $lte: endDate };
+      // For invoices, we use issueDate or createdAt. Let's base stats on createdAt for consistency,
+      // or issueDate since that's when it was actually billed. We'll use createdAt for users/services,
+      // and issueDate for invoices.
+    }
+
+    const userDateFilter = startDate ? { createdAt: { $gte: startDate, $lte: endDate } } : {};
+    const serviceDateFilter = startDate ? { createdAt: { $gte: startDate, $lte: endDate } } : {};
+    const invoiceDateFilter = startDate ? { issueDate: { $gte: startDate, $lte: endDate } } : {};
+
     // Get user counts
-    const clientCount = await User.countDocuments({ role: 'client' });
-    const technicianCount = await User.countDocuments({ role: 'technician' });
+    const clientCount = await User.countDocuments({ role: 'client', ...userDateFilter });
+    const technicianCount = await User.countDocuments({ role: 'technician', ...userDateFilter });
 
     // Get service counts
-    const serviceCount = await Service.countDocuments();
-    const completedServiceCount = await Service.countDocuments({ status: 'Completed' });
+    const serviceCount = await Service.countDocuments(serviceDateFilter);
+    const completedServiceCount = await Service.countDocuments({ status: 'Completed', ...serviceDateFilter });
 
     // Get invoice stats
     const invoiceStats = await Invoice.aggregate([
-      { $group: {
-        _id: null,
-        totalAmount: { $sum: '$total' },
-        paidAmount: {
-          $sum: {
-            $cond: [{ $eq: ['$status', 'Paid'] }, '$total', 0]
-          }
-        },
-        unpaidAmount: {
-          $sum: {
-            $cond: [{ $eq: ['$status', 'Unpaid'] }, '$total', 0]
+      { $match: invoiceDateFilter },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$total' },
+          paidAmount: {
+            $sum: {
+              $cond: [{ $eq: ['$status', 'Paid'] }, '$total', 0]
+            }
+          },
+          unpaidAmount: {
+            $sum: {
+              $cond: [{ $eq: ['$status', 'Unpaid'] }, '$total', 0]
+            }
           }
         }
-      }}
+      }
     ]);
+
+    // Prepare chart data (Revenue over time)
+    // For 'all' or 'year', group by month. For 'month' or 'week', group by day.
+    let groupByFormat;
+    let formatString;
+
+    if (timeframe === 'year' || timeframe === 'all') {
+      groupByFormat = "%Y-%m"; // Group by Year-Month
+      formatString = 'MMM YYYY'; // e.g., Jan 2024
+    } else {
+      groupByFormat = "%Y-%m-%d"; // Group by Date
+      formatString = 'MMM D'; // e.g., Jan 15
+    }
+
+    const revenuePipeline = [
+      { $match: invoiceDateFilter },
+      {
+        $group: {
+          _id: { $dateToString: { format: groupByFormat, date: "$issueDate", timezone: "America/Los_Angeles" } },
+          revenue: { $sum: '$total' }
+        }
+      },
+      { $sort: { _id: 1 } } // Sort by date ascending
+    ];
+
+    const chartRawData = await Invoice.aggregate(revenuePipeline);
+
+    // Format chart data for frontend
+    const chartLabels = [];
+    const chartValues = [];
+
+    chartRawData.forEach(item => {
+      chartLabels.push(moment(item._id).format(formatString));
+      chartValues.push(item.revenue);
+    });
 
     res.render('dashboard/admin', {
       clientCount,
       technicianCount,
       serviceCount,
       completedServiceCount,
-      invoiceStats: invoiceStats[0] || { totalAmount: 0, paidAmount: 0, unpaidAmount: 0 }
+      invoiceStats: invoiceStats[0] || { totalAmount: 0, paidAmount: 0, unpaidAmount: 0 },
+      timeframe,
+      chartData: JSON.stringify({ labels: chartLabels, values: chartValues })
     });
   } catch (err) {
     console.error('Error in GET /dashboard/admin:', err);
