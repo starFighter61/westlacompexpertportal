@@ -8,10 +8,10 @@
       <label for="timeframe" class="me-2 fw-bold">Filter By:</label>
       <select name="timeframe" id="timeframe" class="form-select w-auto"
         onchange="document.getElementById('timeframeForm').submit()">
-        <option value="all" {{#if (eq timeframe 'all' )}}selected{{/if}}>All Time</option>
-        <option value="year" {{#if (eq timeframe 'year' )}}selected{{/if}}>This Year</option>
-        <option value="month" {{#if (eq timeframe 'month' )}}selected{{/if}}>This Month</option>
-        <option value="week" {{#if (eq timeframe 'week' )}}selected{{/if}}>This Week</option>
+        <option value="all" {{#ifEquals timeframe 'all' }}selected{{/ifEquals}}>All Time</option>
+        <option value="year" {{#ifEquals timeframe 'year' }}selected{{/ifEquals}}>This Year</option>
+        <option value="month" {{#ifEquals timeframe 'month' }}selected{{/ifEquals}}>This Month</option>
+        <option value="week" {{#ifEquals timeframe 'week' }}selected{{/ifEquals}}>This Week</option>
       </select>
     </form>
   </div>
