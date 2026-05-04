@@ -72,6 +72,12 @@ app.use('/invoices', require('./routes/invoices'));
 app.use('/messages', require('./routes/messages'));
 app.use('/documents', require('./routes/documents'));
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).render('error/500');
+});
+
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 3000;
 
