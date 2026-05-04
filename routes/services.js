@@ -124,7 +124,12 @@ router.put('/:id', ensureAuthenticated, ensureOwnerOrTechnician(Service), async 
     // Update service fields
     if (status) service.status = status;
     if (technician) service.technician = technician;
-    if (estimatedCompletionDate) service.estimatedCompletionDate = estimatedCompletionDate;
+    if (estimatedCompletionDate) {
+      // Append T12:00:00 to prevent timezone conversion from shifting the date back a day
+      // (HTML date inputs send "YYYY-MM-DD" which gets parsed as midnight UTC,
+      //  and converting to local timezone can roll it back to the previous day)
+      service.estimatedCompletionDate = new Date(estimatedCompletionDate + 'T12:00:00');
+    }
     if (estimatedCost) service.estimatedCost = estimatedCost;
     console.log('Service updated:', service); // ADD LOGGING
     

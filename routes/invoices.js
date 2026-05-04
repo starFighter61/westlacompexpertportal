@@ -147,7 +147,7 @@ router.post('/add/:serviceId', ensureTechnician, async (req, res) => {
       total,
       status: 'Unpaid',
       notes,
-      dueDate,
+      dueDate: new Date(dueDate + 'T12:00:00'),
       issueDate: Date.now()
     });
     
